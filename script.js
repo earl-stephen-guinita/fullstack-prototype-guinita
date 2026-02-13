@@ -1,41 +1,41 @@
-document.addEventListener("DOMContentLoaded", function () {
-  updateNavbar();
+let isLoggedIn = true;      
+let userRole = "admin";     
 
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", function () {
-      localStorage.removeItem("user");
-      updateNavbar();
-      window.location.href = "login.html";
-    });
-  }
-});
+const guestLinks = document.getElementById("guestLinks");
+const userDropdown = document.getElementById("userDropdown");
+const adminLinks = document.querySelectorAll(".role-admin");
+const usernameBtn = document.getElementById("usernameBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
 function updateNavbar() {
-  const user = JSON.parse(localStorage.getItem("user"));
 
-  const notLoggedInLinks = document.querySelectorAll(".not-logged-in");
-  const loggedInDropdown = document.querySelector(".logged-in");
-  const adminItems = document.querySelectorAll(".role-admin");
+    if (isLoggedIn) {
 
-  if (user) {
-    // Show logged-in UI
-    notLoggedInLinks.forEach(el => el.classList.add("d-none"));
-    loggedInDropdown.classList.remove("d-none");
+        guestLinks.classList.add("d-none");
+        userDropdown.classList.remove("d-none");
 
-    // Set username
-    document.getElementById("navUsername").textContent = user.username;
+        usernameBtn.textContent =
+            userRole === "admin" ? "Admin" : "User";
 
-    // Show admin links if role is admin
-    if (user.role === "admin") {
-      adminItems.forEach(el => el.classList.remove("d-none"));
+        adminLinks.forEach(link => {
+            if (userRole === "admin") {
+                link.classList.remove("d-none");
+            } else {
+                link.classList.add("d-none");
+            }
+        });
+
     } else {
-      adminItems.forEach(el => el.classList.add("d-none"));
-    }
 
-  } else {
-    // Show not logged-in UI
-    notLoggedInLinks.forEach(el => el.classList.remove("d-none"));
-    if (loggedInDropdown) loggedInDropdown.classList.add("d-none");
-  }
+        guestLinks.classList.remove("d-none");
+        userDropdown.classList.add("d-none");
+
+    }
 }
+
+logoutBtn.addEventListener("click", function () {
+    isLoggedIn = false;
+    updateNavbar();
+});
+
+updateNavbar();

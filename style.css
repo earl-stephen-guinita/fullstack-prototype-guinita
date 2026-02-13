@@ -1,0 +1,12 @@
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+#page-register,
+#page-login {
+    max-width: 480px;
+}

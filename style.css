@@ -7,6 +7,8 @@
 }
 
 #page-register,
-#page-login {
+#page-login,
+#page-verify,
+#page-profile {
     max-width: 480px;
 }

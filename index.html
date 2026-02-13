@@ -10,19 +10,19 @@
 </head>
 <body>
 
-<!-- ── navigation bar ─────────────────────────────────────────────── -->
+<!-- ── NAVBAR ─────────────────────────────────────────────── -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
         <a class="navbar-brand" href="#" onclick="showPage('home')">Full-Stack App</a>
         <div class="d-flex ms-auto align-items-center">
 
-            <!-- what shows when logged out -->
+            <!-- Shown when logged OUT -->
             <div id="guestLinks">
                 <a class="nav-link d-inline text-white" href="#" onclick="showPage('login')">Login</a>
                 <a class="nav-link d-inline text-white" href="#" onclick="showPage('register')">Register</a>
             </div>
 
-            <!-- what's shown when logged in -->
+            <!-- Shown when logged IN -->
             <div class="dropdown d-none" id="userDropdown">
                 <button class="btn btn-dark dropdown-toggle"
                         type="button"
@@ -46,7 +46,7 @@
     </div>
 </nav>
 
-<!-- ── home page ─────────────────────────────────────────── -->
+<!-- ── PAGE: HOME ─────────────────────────────────────────── -->
 <div id="page-home" class="page active container mt-5">
     <h1>Welcome to Full-Stack App</h1>
     <p class="text-muted">A static prototype before backend integration. Simulates:</p>
@@ -63,13 +63,9 @@
     <button class="btn btn-primary mt-3" onclick="showPage('register')">Get Started →</button>
 </div>
 
-<!-- ── register page ─────────────────────────────────────── -->
+<!-- ── PAGE: REGISTER ─────────────────────────────────────── -->
 <div id="page-register" class="page container mt-5">
     <h4 class="mb-4">Register Account</h4>
-
-    <div id="registerSuccess" class="alert alert-success d-none">
-        ✅ Account created! You can now <a href="#" class="alert-link" onclick="showPage('login')">log in</a>.
-    </div>
 
     <form id="registerForm" novalidate>
         <div class="mb-3">
@@ -95,6 +91,32 @@
         <button type="submit" class="btn btn-success me-2">Sign Up</button>
         <button type="button" class="btn btn-outline-secondary" onclick="showPage('home')">Cancel</button>
     </form>
+</div>
+
+<!-- ── email verification ──────────────────────────────────── -->
+<div id="page-verify" class="page container mt-5">
+    <h4 class="mb-4">Verify Your Email</h4>
+
+    <div class="alert alert-success">
+        ✅ A verification link has been sent to <strong id="verifyEmailDisplay"></strong>.
+    </div>
+
+    <p class="text-muted mt-3">
+        For demo purposes, click below to simulate verification:
+    </p>
+
+    <button class="btn btn-success me-2" id="simulateVerifyBtn">
+        ✅ Simulate Email Verification
+    </button>
+    <button class="btn btn-outline-secondary" onclick="showPage('login')">
+        Go to Login
+    </button>
+
+    <!-- Shown after simulated verification -->
+    <div id="verifiedAlert" class="alert alert-info mt-4 d-none">
+        ✅ Email verified! Your account is now active. You can
+        <a href="#" class="alert-link" onclick="showPage('login')">log in</a>.
+    </div>
 </div>
 
 <!-- ── PAGE: LOGIN ─────────────────────────────────────────── -->

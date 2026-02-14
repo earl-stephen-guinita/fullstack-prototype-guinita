@@ -187,7 +187,7 @@
     </table>
 
     <!-- employee form -->
-    <div id="employeeForm" class="d-none" style="max-width: 480px;">
+    <div id="employeeForm" class="d-none mx-auto" style="max-width: 480px;">
         <h6 id="employeeFormTitle" class="mb-3">Add/Edit Employee</h6>
         <div class="mb-3">
             <label class="form-label">Employee ID</label>
@@ -213,6 +213,45 @@
         </div>
         <button class="btn btn-primary btn-sm me-2" onclick="saveEmployee()">Save</button>
         <button class="btn btn-secondary btn-sm" onclick="toggleEmployeeForm(false)">Cancel</button>
+    </div>
+</div>
+
+<!-- ── department page ────────────────────── -->
+<div id="page-departments" class="page container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">Departments</h4>
+        <button class="btn btn-success btn-sm" onclick="toggleDeptForm(true)">+ Add Department</button>
+    </div>
+
+    <!-- Department Table -->
+    <table class="table table-bordered table-sm mb-4">
+        <thead class="table-light">
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="deptTableBody">
+            <tr id="noDeptsRow">
+                <td colspan="3" class="text-center text-muted">No departments.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- departments form -->
+    <div id="deptForm" class="d-none mx-auto" style="max-width: 480px;">
+        <h6 id="deptFormTitle" class="mb-3">Add/Edit Department</h6>
+        <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" id="deptName">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <input type="text" class="form-control" id="deptDescription">
+        </div>
+        <button class="btn btn-primary btn-sm me-2" onclick="saveDepartment()">Save</button>
+        <button class="btn btn-secondary btn-sm" onclick="toggleDeptForm(false)">Cancel</button>
     </div>
 </div>
 

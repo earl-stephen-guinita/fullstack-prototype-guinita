@@ -17,6 +17,10 @@ function showPage(name) {
     if (name === 'profile') {
         loadProfileView();
     }
+
+        // Render tables when navigating to admin pages
+    if (name === 'employees')   { renderEmployees(); refreshDeptDropdown(); }
+    if (name === 'departments') { renderDepts(); }
 }
 
 // ── Navbar Elements ────────────────────────────────────────
@@ -134,6 +138,183 @@ function loadProfileView() {
         currentUser.email;
     document.getElementById("profileRole").textContent =
         currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+}
+
+// ── Departments Data ───────────────────────────────────────
+let departments  = JSON.parse(localStorage.getItem("departments") || "[]"); 
+let editDeptIndex = null; // tracks edited departments, while null adds new department
+
+function saveDepts() {
+    localStorage.setItem("departments", JSON.stringify(departments));
+}
+
+function renderDepts() {
+    const tbody = document.getElementById("deptTableBody");
+    const noRow = document.getElementById("noDeptsRow");
+    // Clear existing rows except the "no depts" row
+    tbody.querySelectorAll("tr.dept-row").forEach(r => r.remove()); // if dept exists, loop each one and create row
+
+    if (departments.length === 0) {
+        noRow.classList.remove("d-none");
+        return;
+    }
+    noRow.classList.add("d-none");
+
+    departments.forEach((dept, index) => {
+        const tr = document.createElement("tr");
+        tr.classList.add("dept-row");
+        tr.innerHTML = `
+            <td>${dept.name}</td>
+            <td>${dept.description}</td>
+            <td>
+                <button class="btn btn-outline-primary btn-sm me-1" onclick="editDept(${index})">Edit</button>
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteDept(${index})">Delete</button>
+            </td>`;
+        tbody.appendChild(tr);
+    });
+
+    // Also refresh the dept dropdown in the employee form
+    refreshDeptDropdown();
+}
+
+function toggleDeptForm(show, index = null) { // if null clears form, if not null pre-fill form with existing data
+    document.getElementById("deptForm").classList.toggle("d-none", !show);
+    if (show) {
+        editDeptIndex = index;
+        document.getElementById("deptFormTitle").textContent =
+            index !== null ? "Edit Department" : "Add Department";
+        document.getElementById("deptName").value =
+            index !== null ? departments[index].name : "";
+        document.getElementById("deptDescription").value =
+            index !== null ? departments[index].description : "";
+    }
+}
+
+function saveDepartment() {
+    const name        = document.getElementById("deptName").value.trim();
+    const description = document.getElementById("deptDescription").value.trim();
+    if (!name) { alert("Department name is required."); return; }
+
+    if (editDeptIndex !== null) {
+        departments[editDeptIndex] = { name, description };
+    } else {
+        departments.push({ name, description });
+    }
+
+    saveDepts();
+    renderDepts();
+    toggleDeptForm(false);
+}
+
+function editDept(index) {
+    toggleDeptForm(true, index);
+}
+
+function deleteDept(index) { // deletes a department
+    if (confirm("Delete this department?")) {
+        departments.splice(index, 1);
+        saveDepts();
+        renderDepts();
+    }
+}
+
+// ── Employees Data ─────────────────────────────────────────
+let employees      = JSON.parse(localStorage.getItem("employees") || "[]");
+let editEmpIndex   = null; // tracks edited employees, while null adds new employee
+
+function saveEmps() {
+    localStorage.setItem("employees", JSON.stringify(employees));
+}
+
+function refreshDeptDropdown() { // whenever a new dept is added, it appears in the dropdown
+    const select = document.getElementById("empDept");
+    if (!select) return;
+    const current = select.value;
+    select.innerHTML = '<option value="">Select Department</option>';
+    departments.forEach(dept => {
+        const opt = document.createElement("option");
+        opt.value = dept.name;
+        opt.textContent = dept.name;
+        if (dept.name === current) opt.selected = true;
+        select.appendChild(opt);
+    });
+}
+
+function renderEmployees() {
+    const tbody = document.getElementById("employeeTableBody");
+    const noRow = document.getElementById("noEmployeesRow");
+    tbody.querySelectorAll("tr.emp-row").forEach(r => r.remove()); // if employee exists, loop each one and create row
+
+    if (employees.length === 0) {
+        noRow.classList.remove("d-none");
+        return;
+    }
+    noRow.classList.add("d-none");
+
+    employees.forEach((emp, index) => {
+        const tr = document.createElement("tr");
+        tr.classList.add("emp-row");
+        tr.innerHTML = `
+            <td>${emp.id}</td>
+            <td>${emp.email}</td>
+            <td>${emp.position}</td>
+            <td>${emp.dept}</td>
+            <td>
+                <button class="btn btn-outline-primary btn-sm me-1" onclick="editEmp(${index})">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteEmp(${index})">Delete</button>
+            </td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function toggleEmployeeForm(show, index = null) { // if null clears form, if not null pre-fill form with existing data
+    document.getElementById("employeeForm").classList.toggle("d-none", !show);
+    if (show) {
+        editEmpIndex = index;
+        refreshDeptDropdown();
+        document.getElementById("employeeFormTitle").textContent =
+            index !== null ? "Edit Employee" : "Add/Edit Employee";
+        document.getElementById("empId").value       = index !== null ? employees[index].id       : "";
+        document.getElementById("empEmail").value    = index !== null ? employees[index].email    : "";
+        document.getElementById("empPosition").value = index !== null ? employees[index].position : "";
+        document.getElementById("empDept").value     = index !== null ? employees[index].dept     : "";
+        document.getElementById("empHireDate").value = index !== null ? employees[index].hireDate : "";
+    }
+}
+
+function saveEmployee() {
+    const id       = document.getElementById("empId").value.trim();
+    const email    = document.getElementById("empEmail").value.trim();
+    const position = document.getElementById("empPosition").value.trim();
+    const dept     = document.getElementById("empDept").value;
+    const hireDate = document.getElementById("empHireDate").value;
+
+    if (!id || !email || !position || !dept) {
+        alert("ID, Email, Position and Department are required.");
+        return;
+    }
+
+    if (editEmpIndex !== null) {
+        employees[editEmpIndex] = { id, email, position, dept, hireDate };
+    } else {
+        employees.push({ id, email, position, dept, hireDate });
+    }
+
+    saveEmps();
+    renderEmployees();
+    toggleEmployeeForm(false);
+}
+
+function editEmp(index) {
+    toggleEmployeeForm(true, index);
+}
+
+function deleteEmp(index) { // deletes an employee
+    if (confirm("Delete this employee?")) {
+        employees.splice(index, 1);
+        saveEmps();
+        renderEmployees();
+    }
 }
 
 // ── Init ───────────────────────────────────────────────────

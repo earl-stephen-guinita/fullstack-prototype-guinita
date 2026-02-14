@@ -21,6 +21,7 @@ function showPage(name) {
         // Render tables when navigating to admin pages
     if (name === 'employees')   { renderEmployees(); refreshDeptDropdown(); }
     if (name === 'departments') { renderDepts(); }
+    if (name === 'accounts') {renderAccounts(); }
 }
 
 // ── Navbar Elements ────────────────────────────────────────
@@ -230,7 +231,7 @@ function refreshDeptDropdown() { // whenever a new dept is added, it appears in 
     const select = document.getElementById("empDept");
     if (!select) return;
     const current = select.value;
-    select.innerHTML = '<option value="">Select Department</option>';
+    select.innerHTML = '<option value="">--Select Department--</option>';
     departments.forEach(dept => {
         const opt = document.createElement("option");
         opt.value = dept.name;
@@ -261,7 +262,7 @@ function renderEmployees() {
             <td>${emp.dept}</td>
             <td>
                 <button class="btn btn-outline-primary btn-sm me-1" onclick="editEmp(${index})">Edit</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteEmp(${index})">Delete</button>
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteEmp(${index})">Delete</button>
             </td>`;
         tbody.appendChild(tr);
     });
@@ -314,6 +315,102 @@ function deleteEmp(index) { // deletes an employee
         employees.splice(index, 1);
         saveEmps();
         renderEmployees();
+    }
+}
+
+// ── Accounts Data ──────────────────────────────────────────
+let accounts       = JSON.parse(localStorage.getItem("accounts") || "[]");
+let editAccIndex   = null;
+
+function saveAccounts() {
+    localStorage.setItem("accounts", JSON.stringify(accounts));
+}
+
+function renderAccounts() {
+    const tbody = document.getElementById("accountTableBody");
+    const noRow = document.getElementById("noAccountsRow");
+    tbody.querySelectorAll("tr.acc-row").forEach(r => r.remove());
+
+    if (accounts.length === 0) {
+        noRow.classList.remove("d-none");
+        return;
+    }
+    noRow.classList.add("d-none");
+
+    accounts.forEach((acc, index) => {
+        const tr = document.createElement("tr");
+        tr.classList.add("acc-row");
+        tr.innerHTML = `
+            <td>${acc.firstName} ${acc.lastName}</td>
+            <td>${acc.email}</td>
+            <td>${acc.role.charAt(0).toUpperCase() + acc.role.slice(1)}</td>
+            <td>${acc.verified ? '✅' : '❌'}</td>
+            <td>
+                <button class="btn btn-outline-primary btn-sm me-1" onclick="editAcc(${index})">Edit</button>
+                <button class="btn btn-outline-warning btn-sm me-1" onclick="resetPassword(${index})">Reset Password</button>
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteAcc(${index})">Delete</button>
+            </td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function toggleAccountForm(show, index = null) {
+    document.getElementById("accountForm").classList.toggle("d-none", !show);
+    if (show) {
+        editAccIndex = index;
+        document.getElementById("accountFormTitle").textContent =
+            index !== null ? "Edit Account" : "Add/Edit Account";
+        document.getElementById("accFirstName").value = index !== null ? accounts[index].firstName : "";
+        document.getElementById("accLastName").value  = index !== null ? accounts[index].lastName  : "";
+        document.getElementById("accEmail").value     = index !== null ? accounts[index].email     : "";
+        document.getElementById("accPassword").value  = index !== null ? accounts[index].password  : "";
+        document.getElementById("accRole").value      = index !== null ? accounts[index].role      : "user";
+        document.getElementById("accVerified").checked = index !== null ? accounts[index].verified : false;
+    }
+}
+
+function saveAccount() {
+    const firstName = document.getElementById("accFirstName").value.trim();
+    const lastName  = document.getElementById("accLastName").value.trim();
+    const email     = document.getElementById("accEmail").value.trim();
+    const password  = document.getElementById("accPassword").value.trim();
+    const role      = document.getElementById("accRole").value;
+    const verified  = document.getElementById("accVerified").checked;
+
+    if (!firstName || !lastName || !email || !password) {
+        alert("All fields are required.");
+        return;
+    }
+
+    if (editAccIndex !== null) {
+        accounts[editAccIndex] = { firstName, lastName, email, password, role, verified };
+    } else {
+        accounts.push({ firstName, lastName, email, password, role, verified });
+    }
+
+    saveAccounts();
+    renderAccounts();
+    toggleAccountForm(false);
+}
+
+function editAcc(index) {
+    toggleAccountForm(true, index);
+}
+
+function resetPassword(index) {
+    const newPass = prompt("Enter new password for " + accounts[index].firstName + ":");
+    if (newPass && newPass.trim() !== "") {
+        accounts[index].password = newPass.trim();
+        saveAccounts();
+        alert("✅ Password reset successfully.");
+    }
+}
+
+function deleteAcc(index) {
+    if (confirm("Delete this account?")) {
+        accounts.splice(index, 1);
+        saveAccounts();
+        renderAccounts();
     }
 }
 

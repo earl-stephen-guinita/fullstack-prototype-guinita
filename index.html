@@ -7,17 +7,10 @@
     <title>Full-Stack App (Student Build)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* Fallback: ensures page switching works even when style.css
-           can't load (e.g. opening index.html directly via file://) */
-        .page { display: none !important; }
-        .page.active { display: block !important; }
-        #page-register, #page-login, #page-verify { max-width: 480px; }
-    </style>
 </head>
 <body>
 
-<!-- ── NAVBAR ─────────────────────────────────────────────── -->
+<!-- ── navigation bar ─────────────────────────────────────────────── -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
         <a class="navbar-brand" href="#" onclick="showPage('home')">Full-Stack App</a>
@@ -39,11 +32,11 @@
                     Admin
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="usernameBtn">
-                    <li><a class="dropdown-item" href="#">Profile</a></li>
-                    <li><a class="dropdown-item" href="#">My Requests</a></li>
-                    <li><a class="dropdown-item role-admin" href="#">Employees</a></li>
-                    <li><a class="dropdown-item role-admin" href="#">Accounts</a></li>
-                    <li><a class="dropdown-item role-admin" href="#">Departments</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="showPage('profile')">Profile</a></li>
+                    <li><a class="dropdown-item role-admin" href="#" onclick="showPage('employees')">Employees</a></li>
+                    <li><a class="dropdown-item role-admin" href="#" onclick="showPage('accounts')">Accounts</a></li>
+                    <li><a class="dropdown-item role-admin" href="#" onclick="showPage('departments')">Departments</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="showPage('my-requests')">My Requests</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item text-danger" href="#" id="logoutBtn">Logout</a></li>
                 </ul>
@@ -53,7 +46,7 @@
     </div>
 </nav>
 
-<!-- ── PAGE: HOME ─────────────────────────────────────────── -->
+<!-- ── home page ─────────────────────────────────────────── -->
 <div id="page-home" class="page active container mt-5">
     <h1>Welcome to Full-Stack App</h1>
     <p class="text-muted">A static prototype before backend integration. Simulates:</p>
@@ -70,7 +63,7 @@
     <button class="btn btn-primary mt-3" onclick="showPage('register')">Get Started →</button>
 </div>
 
-<!-- ── PAGE: REGISTER ─────────────────────────────────────── -->
+<!-- ── register page ─────────────────────────────────────── -->
 <div id="page-register" class="page container mt-5">
     <h4 class="mb-4">Register Account</h4>
 
@@ -118,7 +111,7 @@
     </button>
 </div>
 
-<!-- ── PAGE: LOGIN ─────────────────────────────────────────── -->
+<!-- ── login page ─────────────────────────────────────────── -->
 <div id="page-login" class="page container mt-5">
 
     <!-- Shown when arriving from email verification -->
@@ -147,20 +140,26 @@
             <button type="button" class="btn btn-outline-secondary" onclick="showPage('home')">Cancel</button>
         </div>
     </form>
-
-    <p class="mt-3 text-muted small">
-        Don't have an account?
-        <a href="#" onclick="showPage('register')">Register here</a>
-    </p>
 </div>
 
-<!-- ── PAGE: DASHBOARD (logged-in landing) ────────────────── -->
-<div id="page-dashboard" class="page container mt-5">
-    <h2>Dashboard</h2>
-    <p class="text-muted">Welcome back, <strong id="dashUsername"></strong>!</p>
-    <div class="alert alert-success">You are logged in successfully.</div>
-</div>
+<!-- ── profile page ───────────────────────────────────────── -->
+<div id="page-profile" class="page container mt-5">
+    <h4 class="mb-4">My Profile</h4>
 
+    <!-- view profile -->
+    <div id="profileView">
+        <div class="card" style="max-width: 480px;">
+            <div class="card-body">
+                <h5 class="card-title mb-3" id="profileFullName"></h5>
+                <p class="mb-1"><strong>Email:</strong> <span id="profileEmail"></span></p>
+                <p class="mb-3"><strong>Role:</strong> <span id="profileRole"></span></p>
+                <button class="btn btn-outline-primary btn-sm" onclick="toggleProfileEdit(true)">
+                    Edit Profile
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- ── SCRIPTS ────────────────────────────────────────────── -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="script.js"></script>

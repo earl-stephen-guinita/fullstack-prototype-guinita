@@ -16,13 +16,13 @@
         <a class="navbar-brand" href="#" onclick="showPage('home')">Full-Stack App</a>
         <div class="d-flex ms-auto align-items-center">
 
-            <!-- Shown when logged OUT -->
+            <!-- Shown when logged out -->
             <div id="guestLinks">
                 <a class="nav-link d-inline text-white" href="#" onclick="showPage('login')">Login</a>
                 <a class="nav-link d-inline text-white" href="#" onclick="showPage('register')">Register</a>
             </div>
 
-            <!-- Shown when logged IN -->
+            <!-- Shown when logged in -->
             <div class="dropdown d-none" id="userDropdown">
                 <button class="btn btn-dark dropdown-toggle"
                         type="button"
@@ -160,6 +160,62 @@
         </div>
     </div>
 </div>
+
+<!-- ── employees page ───────────────────────── -->
+<div id="page-employees" class="page container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">Employees</h4>
+        <button class="btn btn-success btn-sm" onclick="toggleEmployeeForm(true)">+ Add Employee</button>
+    </div>
+
+    <!-- Employee Table -->
+    <table class="table table-bordered table-sm mb-4">
+        <thead class="table-light">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Position</th>
+                <th>Dept</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="employeeTableBody">
+            <tr id="noEmployeesRow">
+                <td colspan="5" class="text-center text-muted">No employees.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- employee form -->
+    <div id="employeeForm" class="d-none" style="max-width: 480px;">
+        <h6 id="employeeFormTitle" class="mb-3">Add/Edit Employee</h6>
+        <div class="mb-3">
+            <label class="form-label">Employee ID</label>
+            <input type="text" class="form-control" id="empId">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">User Email</label>
+            <input type="email" class="form-control" id="empEmail">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Position</label>
+            <input type="text" class="form-control" id="empPosition">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Department</label>
+            <select class="form-select" id="empDept">
+                <option value="">Select Department</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Hire Date</label>
+            <input type="date" class="form-control" id="empHireDate">
+        </div>
+        <button class="btn btn-primary btn-sm me-2" onclick="saveEmployee()">Save</button>
+        <button class="btn btn-secondary btn-sm" onclick="toggleEmployeeForm(false)">Cancel</button>
+    </div>
+</div>
+
 <!-- ── SCRIPTS ────────────────────────────────────────────── -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="script.js"></script>

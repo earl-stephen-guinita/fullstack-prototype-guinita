@@ -124,6 +124,20 @@ document.getElementById("loginForm").addEventListener("submit", function (e) {
         form.reset();
 
         updateNavbar();
+
+        const exists = accounts.find(a => a.email === currentUser.email);
+        if (!exists) {
+            accounts.push({
+                firstName : currentUser.firstName,
+                lastName  : currentUser.lastName,
+                email     : currentUser.email,
+                password  : currentUser.password,
+                role      : currentUser.role,
+                verified  : true
+            });
+            saveAccounts();
+        }
+        
         showPage('profile');
     } else {
         errorBox.classList.remove("d-none");

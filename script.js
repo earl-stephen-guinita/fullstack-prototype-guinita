@@ -424,21 +424,119 @@ function resetPassword(index) {
 function deleteAcc(index) {
     if (confirm("Delete this account?")) {
 
-        // Fix: checks if deleting the currently logged-in account
+        // Fix: checks if deleting the currently logged-in account (prevents deleting own acc)
         if (accounts[index].email === currentUser.email) {
             alert("You cannot delete your own account while logged in.");
             return;
         }        
 
-        // Update: when deleting acc also removes from localStorage
-        const stored = JSON.parse(localStorage.getItem("registeredUser") || "null");
-        if (stored && stored.email === accounts[index].email) {
-            localStorage.removeItem("registeredUser");
-        }
-
         accounts.splice(index, 1);
         saveAccounts();
         renderAccounts();
+    }
+}
+
+// ── My Requests ────────────────────────────────────────────
+let myRequests = JSON.parse(localStorage.getItem("myRequests") || "[]");
+
+function saveRequests() {
+    localStorage.setItem("myRequests", JSON.stringify(myRequests));
+}
+
+function renderRequests() {
+    const noMsg  = document.getElementById("noRequestsMsg");
+    const table  = document.getElementById("requestsTable");
+    const tbody  = document.getElementById("requestsTableBody");
+    tbody.innerHTML = "";
+
+    if (myRequests.length === 0) {
+        noMsg.classList.remove("d-none");
+        table.classList.add("d-none");
+        return;
+    }
+
+    noMsg.classList.add("d-none");
+    table.classList.remove("d-none");
+
+    myRequests.forEach((req, index) => {
+        const itemsSummary = req.items.map(i => `${i.name} (x${i.qty})`).join(", ");
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${req.type}</td>
+            <td>${itemsSummary}</td>
+            <td><span class="badge bg-warning text-dark">${req.status}</span></td>
+            <td>
+                <button class="btn btn-outline-danger btn-sm"
+                        onclick="deleteRequest(${index})">Delete</button>
+            </td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function openRequestModal() {
+    // Reset form
+    document.getElementById("requestType").value = "Equipment";
+    document.getElementById("requestItemsList").innerHTML = "";
+    addRequestItem(); // start with one empty item row
+
+    const modal = new bootstrap.Modal(document.getElementById("requestModal"));
+    modal.show();
+}
+
+function addRequestItem() {
+    const list = document.getElementById("requestItemsList");
+    const isFirst  = list.querySelectorAll(".item-row").length === 0;    
+    const row  = document.createElement("div");
+    row.classList.add("d-flex", "gap-2", "mb-2", "item-row");
+
+        if (isFirst) {
+        row.innerHTML = `
+            <input type="text" class="form-control form-control-sm" placeholder="Item name">
+            <input type="number" class="form-control form-control-sm" value="1" min="1" style="max-width:70px">
+            <button type="button" class="btn btn-outline-secondary btn-sm"
+                    onclick="addRequestItem()">+</button>`;
+    } else {
+        row.innerHTML = `
+            <input type="text" class="form-control form-control-sm" placeholder="Item name">
+            <input type="number" class="form-control form-control-sm" value="1" min="1" style="max-width:70px">
+            <button type="button" class="btn btn-outline-danger btn-sm"
+                    onclick="this.closest('.item-row').remove()">×</button>`;
+    }
+
+    list.appendChild(row);
+}
+
+function submitRequest() {
+    const type     = document.getElementById("requestType").value;
+    const itemRows = document.querySelectorAll("#requestItemsList .item-row");
+    const items    = [];
+
+    itemRows.forEach(row => {
+        const inputs = row.querySelectorAll("input");
+        const name   = inputs[0].value.trim();
+        const qty    = inputs[1].value || 1;
+        if (name) items.push({ name, qty });
+    });
+
+    if (items.length === 0) {
+        alert("Please add at least one item.");
+        return;
+    }
+
+    myRequests.push({ type, items, status: "Pending" });
+    saveRequests();
+    renderRequests();
+
+    // Close form
+    bootstrap.Modal.getInstance(document.getElementById("requestModal")).hide();
+}
+
+function deleteRequest(index) {
+    if (confirm("Delete this request?")) {
+        myRequests.splice(index, 1);
+        saveRequests();
+        renderRequests();
     }
 }
 

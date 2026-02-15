@@ -13,13 +13,13 @@
 <!-- ── navigation bar ─────────────────────────────────────────────── -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-        <a class="navbar-brand" href="#" onclick="showPage('home')">Full-Stack App</a>
+        <a class="navbar-brand" href="#" onclick="navigateTo('#/')">Full-Stack App</a>
         <div class="d-flex ms-auto align-items-center">
 
             <!-- Shown when logged out -->
             <div id="guestLinks" class="role-logged-out d-flex flex-column align-items-end">
-                <a class="nav-link text-white" href="#" onclick="showPage('login')">Login</a>
-                <a class="nav-link text-white" href="#" onclick="showPage('register')">Register</a>
+                <a class="nav-link text-white py-0" href="#" onclick="navigateTo('#/login')">Login</a>
+                <a class="nav-link text-white py-0" href="#" onclick="navigateTo('#/register')">Register</a>
             </div>
 
             <!-- Shown when logged in -->
@@ -32,11 +32,11 @@
                     Admin
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="usernameBtn">
-                    <li><a class="dropdown-item" href="#" onclick="showPage('profile')">Profile</a></li>
-                    <li><a class="dropdown-item role-admin" href="#" onclick="showPage('employees')">Employees</a></li>
-                    <li><a class="dropdown-item role-admin" href="#" onclick="showPage('accounts')">Accounts</a></li>
-                    <li><a class="dropdown-item role-admin" href="#" onclick="showPage('departments')">Departments</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="showPage('my-requests')">My Requests</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="navigateTo('#/profile')">Profile</a></li>
+                    <li><a class="dropdown-item role-admin" href="#" onclick="navigateTo('#/employees')">Employees</a></li>
+                    <li><a class="dropdown-item role-admin" href="#" onclick="navigateTo('#/accounts')">Accounts</a></li>
+                    <li><a class="dropdown-item role-admin" href="#" onclick="navigateTo('#/departments')">Departments</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="navigateTo('#/my-requests')">My Requests</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item text-danger" href="#" id="logoutBtn">Logout</a></li>
                 </ul>
@@ -60,7 +60,7 @@
         ⚠ <strong>Note:</strong> All data is stored in
         <span class="text-danger">localStorage</span>. Refresh to reset.
     </div>
-    <button class="btn btn-primary mt-3" onclick="showPage('register')">Get Started →</button>
+    <button class="btn btn-primary mt-3" onclick="navigateTo('#/register')">Get Started →</button>
 </div>
 
 <!-- ── register page ─────────────────────────────────────── -->
@@ -89,7 +89,7 @@
             <div class="invalid-feedback">Password must be at least 6 characters.</div>
         </div>
         <button type="submit" class="btn btn-success me-2">Sign Up</button>
-        <button type="button" class="btn btn-outline-secondary" onclick="showPage('home')">Cancel</button>
+        <button type="button" class="btn btn-outline-secondary" onclick="navigateTo('#/')">Cancel</button>
     </form>
 </div>
 
@@ -106,7 +106,7 @@
     <button class="btn btn-success me-2" id="simulateVerifyBtn">
         ✅ Simulate Email Verification
     </button>
-    <button class="btn btn-outline-secondary" onclick="showPage('login')">
+    <button class="btn btn-outline-secondary" onclick="navigateTo('#/login')">
         Go to Login
     </button>
 </div>
@@ -137,7 +137,7 @@
         </div>
         <div class="mt-4">
             <button type="submit" class="btn btn-primary me-2">Login</button>
-            <button type="button" class="btn btn-outline-secondary" onclick="showPage('home')">Cancel</button>
+            <button type="button" class="btn btn-outline-secondary" onclick="navigateTo('#/')">Cancel</button>
         </div>
     </form>
 </div>

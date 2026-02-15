@@ -1,6 +1,64 @@
 let isLoggedIn  = false;
 let currentUser = null;
 
+// ── Hash Routing ───────────────────────────────────────────
+function navigateTo(hash) {
+    window.location.hash = hash;
+}
+
+function handleRouting() {
+    const hash = window.location.hash || '#/';
+
+    // Protected routes — must be logged in
+    const protectedRoutes = ['#/profile', '#/my-requests'];
+
+    // Admin-only routes
+    const adminRoutes = ['#/employees', '#/accounts', '#/departments'];
+
+    // Redirect unauthenticated users away from protected pages
+    if (protectedRoutes.includes(hash) && !isLoggedIn) {
+        window.location.hash = '#/login';
+        return;
+    }
+
+    // Redirect non-admins away from admin pages
+    if (adminRoutes.includes(hash) && (!isLoggedIn || currentUser.role !== 'admin')) {
+        window.location.hash = '#/login';
+        return;
+    }
+
+    // Map hash to page name
+    const pageMap = {
+        '#/'             : 'home',
+        '#/register'     : 'register',
+        '#/verify'       : 'verify',
+        '#/login'        : 'login',
+        '#/profile'      : 'profile',
+        '#/employees'    : 'employees',
+        '#/accounts'     : 'accounts',
+        '#/departments'  : 'departments',
+        '#/my-requests'  : 'my-requests'
+    };
+
+    const pageName = pageMap[hash];
+    if (pageName) {
+        showPage(pageName);
+    } else {
+        window.location.hash = '#/';
+    }
+}
+
+// Listen for hash changes (back/forward button, manual URL edit)
+window.addEventListener('hashchange', handleRouting);
+
+// On first load — set hash to #/ if empty, then route
+window.addEventListener('load', function () {
+    if (!window.location.hash) {
+        window.location.hash = '#/';
+    }
+    handleRouting();
+});
+
 // ── page navigation ────────────────────────────────────────
 function showPage(name) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); // finds every element that has class page and shows one page at a time
@@ -78,7 +136,7 @@ document.getElementById("registerForm").addEventListener("submit", function (e) 
     form.classList.remove("was-validated");
     form.reset();
     document.getElementById("verifyEmailDisplay").textContent = email;
-    showPage('verify');
+    navigateTo('#/verify');
 });
 
 // ── Simulate Email Verification ────────────────────────────
@@ -92,7 +150,7 @@ document.getElementById("simulateVerifyBtn").addEventListener("click", function 
     this.textContent = "✔ Verified!";
     setTimeout(() => {
         document.getElementById("loginVerifiedBanner").classList.remove("d-none");
-        showPage('login');
+        navigateTo('#/login');
     }, 1200);
 });
 

@@ -12,3 +12,18 @@
 #page-profile {
     max-width: 480px;
 }
+
+body.not-authenticated .role-logged-in { 
+    display: none; 
+}
+
+body.authenticated .role-logged-out { 
+    display: none; 
+}
+
+.role-admin { 
+    display: none; 
+}
+body.is-admin .role-admin { 
+    display: block; 
+}

@@ -1,8 +1,7 @@
 let isLoggedIn  = false;
-let userRole    = "user";
 let currentUser = null;
 
-// ── function to what page is clicked ────────────────────────────────────────
+// ── page navigation ────────────────────────────────────────
 function showPage(name) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); // finds every element that has class page and shows one page at a time
     const target = document.getElementById('page-' + name); // finds the specific page that you want to show
@@ -22,30 +21,30 @@ function showPage(name) {
     if (name === 'employees')   { renderEmployees(); refreshDeptDropdown(); }
     if (name === 'departments') { renderDepts(); }
     if (name === 'accounts') {renderAccounts(); }
+    if (name === 'my-requests')  { renderRequests(); }
 }
 
 // ── Navbar Elements ────────────────────────────────────────
-const guestLinks   = document.getElementById("guestLinks");
-const userDropdown = document.getElementById("userDropdown");
-const adminLinks   = document.querySelectorAll(".role-admin");
 const usernameBtn  = document.getElementById("usernameBtn");
 const logoutBtn    = document.getElementById("logoutBtn");
 
 // ── Navbar State ───────────────────────────────────────────
 function updateNavbar() {
-    if (isLoggedIn) {
-        guestLinks.classList.add("d-none");
-        userDropdown.classList.remove("d-none");
-        usernameBtn.textContent = currentUser
-            ? currentUser.firstName
-            : (userRole === "admin" ? "Admin" : "User");
+    const body = document.body;
 
-        adminLinks.forEach(link =>
-            link.classList.toggle("d-none", userRole !== "admin")
-        );
+    if (isLoggedIn && currentUser) {
+        body.classList.add("authenticated");
+        body.classList.remove("not-authenticated");
+        usernameBtn.textContent = currentUser.firstName;
+            
+        if (currentUser.role === "admin") {
+            body.classList.add("is-admin");
+        } else {
+            body.classList.remove("is-admin");
+        }
     } else {
-        guestLinks.classList.remove("d-none");
-        userDropdown.classList.add("d-none");
+        body.classList.add("not-authenticated");
+        body.classList.remove("authenticated", "is-admin");
     }
 }
 
@@ -53,7 +52,6 @@ function updateNavbar() {
 logoutBtn.addEventListener("click", function () {
     isLoggedIn  = false;
     currentUser = null;
-    userRole    = "user";
     updateNavbar();
     showPage('home');
 });
@@ -117,7 +115,6 @@ document.getElementById("loginForm").addEventListener("submit", function (e) {
         // Successful login
         isLoggedIn  = true;
         currentUser = stored;
-        userRole    = stored.role;  // reads "admin" from localStorage
 
         errorBox.classList.add("d-none");
         form.classList.remove("was-validated");
@@ -141,6 +138,7 @@ document.getElementById("loginForm").addEventListener("submit", function (e) {
 
         showPage('profile');
     } else {
+        errorBox.textContent = "Invalid email or password.";
         errorBox.classList.remove("d-none");
     }
 });

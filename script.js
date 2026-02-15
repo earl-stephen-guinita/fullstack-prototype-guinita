@@ -125,6 +125,7 @@ document.getElementById("loginForm").addEventListener("submit", function (e) {
 
         updateNavbar();
 
+        // if logged acc exists, checks if acc exists in acc table. Then add acc to table if not.
         const exists = accounts.find(a => a.email === currentUser.email);
         if (!exists) {
             accounts.push({
@@ -137,7 +138,7 @@ document.getElementById("loginForm").addEventListener("submit", function (e) {
             });
             saveAccounts();
         }
-        
+
         showPage('profile');
     } else {
         errorBox.classList.remove("d-none");
@@ -422,6 +423,19 @@ function resetPassword(index) {
 
 function deleteAcc(index) {
     if (confirm("Delete this account?")) {
+
+        // Fix: checks if deleting the currently logged-in account
+        if (accounts[index].email === currentUser.email) {
+            alert("You cannot delete your own account while logged in.");
+            return;
+        }        
+
+        // Update: when deleting acc also removes from localStorage
+        const stored = JSON.parse(localStorage.getItem("registeredUser") || "null");
+        if (stored && stored.email === accounts[index].email) {
+            localStorage.removeItem("registeredUser");
+        }
+
         accounts.splice(index, 1);
         saveAccounts();
         renderAccounts();

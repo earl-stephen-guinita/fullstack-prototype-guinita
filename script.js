@@ -1,10 +1,70 @@
-let isLoggedIn  = false;
+let isLoggedIn = false;
 let currentUser = null;
 
 // ── Database (localStorage-backed) ────────────────────────
+const STORAGE_KEY = 'ipt_demo_v1';
+
 window.db = {
-    accounts: JSON.parse(localStorage.getItem("accounts") || "[]")
+    accounts: [],
+    departments: [],
+    employees: [],
+    myRequests: []
 };
+
+function loadFromStorage() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            window.db.accounts = parsed.accounts || [];
+            window.db.departments = parsed.departments || [];
+            window.db.employees = parsed.employees || [];
+            window.db.myRequests = parsed.myRequests || [];
+        } else {
+            // No data yet — seed with defaults
+            window.db.accounts = [
+                {
+                    firstName: 'Admin',
+                    lastName: 'User',
+                    email: 'admin@example.com',
+                    password: 'Password123!',
+                    role: 'admin',
+                    verified: true
+                }
+            ];
+            window.db.departments = [
+                { name: 'Engineering', description: 'Engineering department' },
+                { name: 'HR', description: 'Human Resources department' }
+            ];
+            window.db.employees = [];
+            window.db.myRequests = [];
+            saveToStorage();
+        }
+    } catch (e) {
+        // Corrupt data — reset to defaults
+        window.db.accounts = [
+            {
+                firstName: 'Admin',
+                lastName: 'User',
+                email: 'admin@example.com',
+                password: 'Password123!',
+                role: 'admin',
+                verified: true
+            }
+        ];
+        window.db.departments = [
+            { name: 'Engineering', description: 'Engineering department' },
+            { name: 'HR', description: 'Human Resources department' }
+        ];
+        window.db.employees = [];
+        window.db.myRequests = [];
+        saveToStorage();
+    }
+}
+
+function saveToStorage() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(window.db));
+}
 
 // ── Hash Routing ───────────────────────────────────────────
 function navigateTo(hash) {
@@ -34,15 +94,15 @@ function handleRouting() {
 
     // Map hash to page name
     const pageMap = {
-        '#/'             : 'home',
-        '#/register'     : 'register',
-        '#/verify'       : 'verify',
-        '#/login'        : 'login',
-        '#/profile'      : 'profile',
-        '#/employees'    : 'employees',
-        '#/accounts'     : 'accounts',
-        '#/departments'  : 'departments',
-        '#/my-requests'  : 'my-requests'
+        '#/': 'home',
+        '#/register': 'register',
+        '#/verify': 'verify',
+        '#/login': 'login',
+        '#/profile': 'profile',
+        '#/employees': 'employees',
+        '#/accounts': 'accounts',
+        '#/departments': 'departments',
+        '#/my-requests': 'my-requests'
     };
 
     const pageName = pageMap[hash];
@@ -73,27 +133,27 @@ function showPage(name) {
     // shows email verified banner
     if (name !== 'login') {
         document.getElementById("loginVerifiedBanner").classList.add("d-none");
-    }    
+    }
 
     // only runs when name is profile and calls loadProfileView function
     if (name === 'profile') {
-        loadProfileView();
+        renderProfile();
     }
 
-        // Render tables when navigating to admin pages
-    if (name === 'employees')   { renderEmployees(); refreshDeptDropdown(); }
+    // Render tables when navigating to admin pages
+    if (name === 'employees') { renderEmployees(); refreshDeptDropdown(); }
     if (name === 'departments') { renderDepts(); }
-    if (name === 'accounts') {renderAccounts(); }
-    if (name === 'my-requests')  { renderRequests(); }
+    if (name === 'accounts') { renderAccounts(); }
+    if (name === 'my-requests') { renderRequests(); }
 }
 
 // ── Navbar Elements ────────────────────────────────────────
-const usernameBtn  = document.getElementById("usernameBtn");
-const logoutBtn    = document.getElementById("logoutBtn");
+const usernameBtn = document.getElementById("usernameBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
 // ── Navbar State ───────────────────────────────────────────
 function setAuthState(isAuth, user = null) {
-    isLoggedIn  = isAuth;
+    isLoggedIn = isAuth;
     currentUser = user;
 
     const body = document.body;
@@ -124,11 +184,11 @@ logoutBtn.addEventListener("click", function () {
 document.getElementById("registerForm").addEventListener("submit", function (e) {
     e.preventDefault();
 
-    const form      = this;
+    const form = this;
     const firstName = document.getElementById("regFirstName").value.trim();
-    const lastName  = document.getElementById("regLastName").value.trim();
-    const email     = document.getElementById("regEmail").value.trim();
-    const password  = document.getElementById("regPassword").value;
+    const lastName = document.getElementById("regLastName").value.trim();
+    const email = document.getElementById("regEmail").value.trim();
+    const password = document.getElementById("regPassword").value;
 
     if (!form.checkValidity()) {
         form.classList.add("was-validated");
@@ -143,7 +203,7 @@ document.getElementById("registerForm").addEventListener("submit", function (e) 
     }
     // Save to accounts array
     window.db.accounts.push({ firstName, lastName, email, password, role: "admin", verified: false });
-    localStorage.setItem("accounts", JSON.stringify(window.db.accounts));
+    saveToStorage();
     // Store just the email for verification step
     localStorage.setItem("unverified_email", email);
 
@@ -158,10 +218,10 @@ document.getElementById("simulateVerifyBtn").addEventListener("click", function 
     const email = localStorage.getItem("unverified_email");
     const account = window.db.accounts.find(a => a.email === email);
     if (account) {
-        account.verified = true;
-        localStorage.setItem("accounts", JSON.stringify(window.db.accounts));
+    account.verified = true;
+    saveToStorage();
     }
-    this.disabled    = true;
+    this.disabled = true;
     this.textContent = "✔ Verified!";
     setTimeout(() => {
         document.getElementById("loginVerifiedBanner").classList.remove("d-none");
@@ -173,8 +233,8 @@ document.getElementById("simulateVerifyBtn").addEventListener("click", function 
 document.getElementById("loginForm").addEventListener("submit", function (e) {
     e.preventDefault();
 
-    const form     = this;
-    const email    = document.getElementById("loginEmail").value.trim();
+    const form = this;
+    const email = document.getElementById("loginEmail").value.trim();
     const password = document.getElementById("loginPassword").value;
     const errorBox = document.getElementById("loginError");
 
@@ -203,7 +263,7 @@ document.getElementById("loginForm").addEventListener("submit", function (e) {
 });
 
 // ── profile card ─────────────────────────────────────
-function loadProfileView() {
+function renderProfile() {
     if (!currentUser) return; // collects logged-in user's data
     document.getElementById("profileFullName").textContent =
         currentUser.firstName + " " + currentUser.lastName;
@@ -214,11 +274,12 @@ function loadProfileView() {
 }
 
 // ── Departments Data ───────────────────────────────────────
-let departments  = JSON.parse(localStorage.getItem("departments") || "[]"); 
+let departments = [];
 let editDeptIndex = null; // tracks edited departments, while null adds new department
 
 function saveDepts() {
-    localStorage.setItem("departments", JSON.stringify(departments));
+    window.db.departments = departments;
+    saveToStorage();
 }
 
 function renderDepts() {
@@ -264,7 +325,7 @@ function toggleDeptForm(show, index = null) { // if null clears form, if not nul
 }
 
 function saveDepartment() {
-    const name        = document.getElementById("deptName").value.trim();
+    const name = document.getElementById("deptName").value.trim();
     const description = document.getElementById("deptDescription").value.trim();
     if (!name) { alert("Department name is required."); return; }
 
@@ -292,11 +353,12 @@ function deleteDept(index) { // deletes a department
 }
 
 // ── Employees Data ─────────────────────────────────────────
-let employees      = JSON.parse(localStorage.getItem("employees") || "[]");
-let editEmpIndex   = null; // tracks edited employees, while null adds new employee
+let employees = [];
+let editEmpIndex = null; // tracks edited employees, while null adds new employee
 
 function saveEmps() {
-    localStorage.setItem("employees", JSON.stringify(employees));
+    window.db.employees = employees;
+    saveToStorage();
 }
 
 function refreshDeptDropdown() { // whenever a new dept is added, it appears in the dropdown
@@ -347,19 +409,19 @@ function toggleEmployeeForm(show, index = null) { // if null clears form, if not
         refreshDeptDropdown();
         document.getElementById("employeeFormTitle").textContent =
             index !== null ? "Edit Employee" : "Add/Edit Employee";
-        document.getElementById("empId").value       = index !== null ? employees[index].id       : "";
-        document.getElementById("empEmail").value    = index !== null ? employees[index].email    : "";
+        document.getElementById("empId").value = index !== null ? employees[index].id : "";
+        document.getElementById("empEmail").value = index !== null ? employees[index].email : "";
         document.getElementById("empPosition").value = index !== null ? employees[index].position : "";
-        document.getElementById("empDept").value     = index !== null ? employees[index].dept     : "";
+        document.getElementById("empDept").value = index !== null ? employees[index].dept : "";
         document.getElementById("empHireDate").value = index !== null ? employees[index].hireDate : "";
     }
 }
 
 function saveEmployee() {
-    const id       = document.getElementById("empId").value.trim();
-    const email    = document.getElementById("empEmail").value.trim();
+    const id = document.getElementById("empId").value.trim();
+    const email = document.getElementById("empEmail").value.trim();
     const position = document.getElementById("empPosition").value.trim();
-    const dept     = document.getElementById("empDept").value;
+    const dept = document.getElementById("empDept").value;
     const hireDate = document.getElementById("empHireDate").value;
 
     if (!id || !email || !position || !dept) {
@@ -391,10 +453,10 @@ function deleteEmp(index) { // deletes an employee
 }
 
 // ── Accounts Data ──────────────────────────────────────────
-let editAccIndex   = null;
+let editAccIndex = null;
 
 function saveAccounts() {
-    localStorage.setItem("accounts", JSON.stringify(window.db.accounts));
+    saveToStorage();
 }
 
 function renderAccounts() {
@@ -432,21 +494,21 @@ function toggleAccountForm(show, index = null) {
         document.getElementById("accountFormTitle").textContent =
             index !== null ? "Edit Account" : "Add/Edit Account";
         document.getElementById("accFirstName").value = index !== null ? window.db.accounts[index].firstName : "";
-        document.getElementById("accLastName").value  = index !== null ? window.db.accounts[index].lastName  : "";
-        document.getElementById("accEmail").value     = index !== null ? window.db.accounts[index].email     : "";
-        document.getElementById("accPassword").value  = index !== null ? window.db.accounts[index].password  : "";
-        document.getElementById("accRole").value      = index !== null ? window.db.accounts[index].role      : "user";
+        document.getElementById("accLastName").value = index !== null ? window.db.accounts[index].lastName : "";
+        document.getElementById("accEmail").value = index !== null ? window.db.accounts[index].email : "";
+        document.getElementById("accPassword").value = index !== null ? window.db.accounts[index].password : "";
+        document.getElementById("accRole").value = index !== null ? window.db.accounts[index].role : "user";
         document.getElementById("accVerified").checked = index !== null ? window.db.accounts[index].verified : false;
     }
 }
 
 function saveAccount() {
     const firstName = document.getElementById("accFirstName").value.trim();
-    const lastName  = document.getElementById("accLastName").value.trim();
-    const email     = document.getElementById("accEmail").value.trim();
-    const password  = document.getElementById("accPassword").value.trim();
-    const role      = document.getElementById("accRole").value;
-    const verified  = document.getElementById("accVerified").checked;
+    const lastName = document.getElementById("accLastName").value.trim();
+    const email = document.getElementById("accEmail").value.trim();
+    const password = document.getElementById("accPassword").value.trim();
+    const role = document.getElementById("accRole").value;
+    const verified = document.getElementById("accVerified").checked;
 
     if (!firstName || !lastName || !email || !password) {
         alert("All fields are required.");
@@ -484,7 +546,7 @@ function deleteAcc(index) {
         if (window.db.accounts[index].email === currentUser.email) {
             alert("You cannot delete your own account while logged in.");
             return;
-        }        
+        }
 
         window.db.accounts.splice(index, 1);
         saveAccounts();
@@ -493,16 +555,17 @@ function deleteAcc(index) {
 }
 
 // ── My Requests ────────────────────────────────────────────
-let myRequests = JSON.parse(localStorage.getItem("myRequests") || "[]");
+let myRequests = [];
 
 function saveRequests() {
-    localStorage.setItem("myRequests", JSON.stringify(myRequests));
+    window.db.myRequests = myRequests;
+    saveToStorage();
 }
 
 function renderRequests() {
-    const noMsg  = document.getElementById("noRequestsMsg");
-    const table  = document.getElementById("requestsTable");
-    const tbody  = document.getElementById("requestsTableBody");
+    const noMsg = document.getElementById("noRequestsMsg");
+    const table = document.getElementById("requestsTable");
+    const tbody = document.getElementById("requestsTableBody");
     tbody.innerHTML = "";
 
     if (myRequests.length === 0) {
@@ -542,11 +605,11 @@ function openRequestModal() {
 
 function addRequestItem() {
     const list = document.getElementById("requestItemsList");
-    const isFirst  = list.querySelectorAll(".item-row").length === 0;    
-    const row  = document.createElement("div");
+    const isFirst = list.querySelectorAll(".item-row").length === 0;
+    const row = document.createElement("div");
     row.classList.add("d-flex", "gap-2", "mb-2", "item-row");
 
-        if (isFirst) {
+    if (isFirst) {
         row.innerHTML = `
             <input type="text" class="form-control form-control-sm" placeholder="Item name">
             <input type="number" class="form-control form-control-sm" value="1" min="1" style="max-width:70px">
@@ -564,14 +627,14 @@ function addRequestItem() {
 }
 
 function submitRequest() {
-    const type     = document.getElementById("requestType").value;
+    const type = document.getElementById("requestType").value;
     const itemRows = document.querySelectorAll("#requestItemsList .item-row");
-    const items    = [];
+    const items = [];
 
     itemRows.forEach(row => {
         const inputs = row.querySelectorAll("input");
-        const name   = inputs[0].value.trim();
-        const qty    = inputs[1].value || 1;
+        const name = inputs[0].value.trim();
+        const qty = inputs[1].value || 1;
         if (name) items.push({ name, qty });
     });
 
@@ -597,6 +660,13 @@ function deleteRequest(index) {
 }
 
 // ── Init ───────────────────────────────────────────────────
+loadFromStorage();
+
+// Sync local arrays from window.db after loading
+departments = window.db.departments;
+employees   = window.db.employees;
+myRequests  = window.db.myRequests;
+
 const savedToken = localStorage.getItem("auth_token");
 if (savedToken) {
     const user = window.db.accounts.find(a => a.email === savedToken);

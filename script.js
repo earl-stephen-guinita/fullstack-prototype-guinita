@@ -33,8 +33,8 @@ function loadFromStorage() {
                 }
             ];
             window.db.departments = [
-                { name: 'Engineering', description: 'Engineering department' },
-                { name: 'HR', description: 'Human Resources department' }
+                { name: 'Engineering', description: 'Software team' },
+                { name: 'HR', description: 'Human Resources' }
             ];
             window.db.employees = [];
             window.db.myRequests = [];
@@ -141,9 +141,9 @@ function showPage(name) {
     }
 
     // Render tables when navigating to admin pages
-    if (name === 'employees') { renderEmployees(); refreshDeptDropdown(); }
+    if (name === 'employees') { renderEmployeesTable(); refreshDeptDropdown(); }
     if (name === 'departments') { renderDepts(); }
-    if (name === 'accounts') { renderAccounts(); }
+    if (name === 'accounts') { renderAccountsList(); }
     if (name === 'my-requests') { renderRequests(); }
 }
 
@@ -375,7 +375,7 @@ function refreshDeptDropdown() { // whenever a new dept is added, it appears in 
     });
 }
 
-function renderEmployees() {
+function renderEmployeesTable() {
     const tbody = document.getElementById("employeeTableBody");
     const noRow = document.getElementById("noEmployeesRow");
     tbody.querySelectorAll("tr.emp-row").forEach(r => r.remove()); // if employee exists, loop each one and create row
@@ -443,7 +443,7 @@ function saveEmployee() {
     }
 
     saveEmps();
-    renderEmployees();
+    renderEmployeesTable();
     toggleEmployeeForm(false);
 }
 
@@ -455,7 +455,7 @@ function deleteEmp(index) { // deletes an employee
     if (confirm("Delete this employee?")) {
         employees.splice(index, 1);
         saveEmps();
-        renderEmployees();
+        renderEmployeesTable();
     }
 }
 
@@ -466,7 +466,7 @@ function saveAccounts() {
     saveToStorage();
 }
 
-function renderAccounts() {
+function renderAccountsList() {
     const tbody = document.getElementById("accountTableBody");
     const noRow = document.getElementById("noAccountsRow");
     tbody.querySelectorAll("tr.acc-row").forEach(r => r.remove());
@@ -529,7 +529,7 @@ function saveAccount() {
     }
 
     saveAccounts();
-    renderAccounts();
+    renderAccountsList();
     toggleAccountForm(false);
 }
 
@@ -561,12 +561,18 @@ function deleteAcc(index) {
 
         window.db.accounts.splice(index, 1);
         saveAccounts();
-        renderAccounts();
+        renderAccountsList();
     }
 }
 
 // ── My Requests ────────────────────────────────────────────
 let myRequests = [];
+
+function getBadgeClass(status) {
+    if (status === 'Approved') return 'bg-success';
+    if (status === 'Rejected') return 'bg-danger';
+    return 'bg-warning text-dark';  // Pending
+}
 
 function saveRequests() {
     window.db.myRequests = myRequests;
@@ -579,7 +585,9 @@ function renderRequests() {
     const tbody = document.getElementById("requestsTableBody");
     tbody.innerHTML = "";
 
-    if (myRequests.length === 0) {
+    const userRequests = myRequests.filter(req => req.employeeEmail === currentUser.email);
+
+    if (userRequests.length === 0) { 
         noMsg.classList.remove("d-none");
         table.classList.add("d-none");
         return;
@@ -588,17 +596,18 @@ function renderRequests() {
     noMsg.classList.add("d-none");
     table.classList.remove("d-none");
 
-    myRequests.forEach((req, index) => {
+    userRequests.forEach((req) => {
+        const realIndex   = myRequests.indexOf(req);
         const itemsSummary = req.items.map(i => `${i.name} (x${i.qty})`).join(", ");
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td>${index + 1}</td>
             <td>${req.type}</td>
             <td>${itemsSummary}</td>
-            <td><span class="badge bg-warning text-dark">${req.status}</span></td>
+            <td>${req.date || '—'}</td>
+            <td><span class="badge ${getBadgeClass(req.status)}">${req.status}</span></td>
             <td>
                 <button class="btn btn-outline-danger btn-sm"
-                        onclick="deleteRequest(${index})">Delete</button>
+                        onclick="deleteRequest(${realIndex})">Delete</button>
             </td>`;
         tbody.appendChild(tr);
     });
@@ -654,7 +663,13 @@ function submitRequest() {
         return;
     }
 
-    myRequests.push({ type, items, status: "Pending" });
+    myRequests.push({
+        type,
+        items,
+        status        : "Pending",
+        date          : new Date().toLocaleDateString(),
+        employeeEmail : currentUser.email
+    });
     saveRequests();
     renderRequests();
 

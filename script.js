@@ -1,6 +1,11 @@
 let isLoggedIn  = false;
 let currentUser = null;
 
+// ── Database (localStorage-backed) ────────────────────────
+window.db = {
+    accounts: JSON.parse(localStorage.getItem("accounts") || "[]")
+};
+
 // ── Hash Routing ───────────────────────────────────────────
 function navigateTo(hash) {
     window.location.hash = hash;
@@ -87,15 +92,16 @@ const usernameBtn  = document.getElementById("usernameBtn");
 const logoutBtn    = document.getElementById("logoutBtn");
 
 // ── Navbar State ───────────────────────────────────────────
-function updateNavbar() {
-    const body = document.body;
+function setAuthState(isAuth, user = null) {
+    isLoggedIn  = isAuth;
+    currentUser = user;
 
-    if (isLoggedIn && currentUser) {
+    const body = document.body;
+    if (isAuth && user) {
         body.classList.add("authenticated");
         body.classList.remove("not-authenticated");
-        usernameBtn.textContent = currentUser.firstName;
-            
-        if (currentUser.role === "admin") {
+        usernameBtn.textContent = user.firstName;
+        if (user.role === "admin") {
             body.classList.add("is-admin");
         } else {
             body.classList.remove("is-admin");
@@ -103,15 +109,15 @@ function updateNavbar() {
     } else {
         body.classList.add("not-authenticated");
         body.classList.remove("authenticated", "is-admin");
+        usernameBtn.textContent = "";
     }
 }
 
 // ── Logout ─────────────────────────────────────────────────
 logoutBtn.addEventListener("click", function () {
-    isLoggedIn  = false;
-    currentUser = null;
-    updateNavbar();
-    showPage('home');
+    localStorage.removeItem("auth_token");
+    setAuthState(false);
+    navigateTo('#/');
 });
 
 // ── Register Form ──────────────────────────────────────────
@@ -129,9 +135,17 @@ document.getElementById("registerForm").addEventListener("submit", function (e) 
         return;
     }
 
-    // Save to localStorage — role is "admin" for every registered user
-    const user = { firstName, lastName, email, password, role: "admin", verified: false };
-    localStorage.setItem("registeredUser", JSON.stringify(user));
+    // Check duplicate first
+    const exists = window.db.accounts.find(a => a.email === email);
+    if (exists) {
+        alert("Email already registered.");
+        return;
+    }
+    // Save to accounts array
+    window.db.accounts.push({ firstName, lastName, email, password, role: "admin", verified: false });
+    localStorage.setItem("accounts", JSON.stringify(window.db.accounts));
+    // Store just the email for verification step
+    localStorage.setItem("unverified_email", email);
 
     form.classList.remove("was-validated");
     form.reset();
@@ -141,10 +155,11 @@ document.getElementById("registerForm").addEventListener("submit", function (e) 
 
 // ── Simulate Email Verification ────────────────────────────
 document.getElementById("simulateVerifyBtn").addEventListener("click", function () {
-    const stored = JSON.parse(localStorage.getItem("registeredUser") || "null");
-    if (stored) {
-        stored.verified = true;
-        localStorage.setItem("registeredUser", JSON.stringify(stored));
+    const email = localStorage.getItem("unverified_email");
+    const account = window.db.accounts.find(a => a.email === email);
+    if (account) {
+        account.verified = true;
+        localStorage.setItem("accounts", JSON.stringify(window.db.accounts));
     }
     this.disabled    = true;
     this.textContent = "✔ Verified!";
@@ -168,33 +183,19 @@ document.getElementById("loginForm").addEventListener("submit", function (e) {
         return;
     }
 
-    const stored = JSON.parse(localStorage.getItem("registeredUser") || "null");
-    if (stored && stored.email === email && stored.password === password) {
-        // Successful login
-        isLoggedIn  = true;
-        currentUser = stored;
+    const user = window.db.accounts.find(
+        a => a.email === email && a.password === password && a.verified === true
+    );
+
+    if (user) {
+        localStorage.setItem("auth_token", email);
+        setAuthState(true, user);
 
         errorBox.classList.add("d-none");
         form.classList.remove("was-validated");
         form.reset();
 
-        updateNavbar();
-
-        // if logged acc exists, checks if acc exists in acc table. Then add acc to table if not.
-        const exists = accounts.find(a => a.email === currentUser.email);
-        if (!exists) {
-            accounts.push({
-                firstName : currentUser.firstName,
-                lastName  : currentUser.lastName,
-                email     : currentUser.email,
-                password  : currentUser.password,
-                role      : currentUser.role,
-                verified  : true
-            });
-            saveAccounts();
-        }
-
-        showPage('profile');
+        navigateTo('#/profile')
     } else {
         errorBox.textContent = "Invalid email or password.";
         errorBox.classList.remove("d-none");
@@ -390,11 +391,10 @@ function deleteEmp(index) { // deletes an employee
 }
 
 // ── Accounts Data ──────────────────────────────────────────
-let accounts       = JSON.parse(localStorage.getItem("accounts") || "[]");
 let editAccIndex   = null;
 
 function saveAccounts() {
-    localStorage.setItem("accounts", JSON.stringify(accounts));
+    localStorage.setItem("accounts", JSON.stringify(window.db.accounts));
 }
 
 function renderAccounts() {
@@ -402,13 +402,13 @@ function renderAccounts() {
     const noRow = document.getElementById("noAccountsRow");
     tbody.querySelectorAll("tr.acc-row").forEach(r => r.remove());
 
-    if (accounts.length === 0) {
+    if (window.db.accounts.length === 0) {
         noRow.classList.remove("d-none");
         return;
     }
     noRow.classList.add("d-none");
 
-    accounts.forEach((acc, index) => {
+    window.db.accounts.forEach((acc, index) => {
         const tr = document.createElement("tr");
         tr.classList.add("acc-row");
         tr.innerHTML = `
@@ -431,12 +431,12 @@ function toggleAccountForm(show, index = null) {
         editAccIndex = index;
         document.getElementById("accountFormTitle").textContent =
             index !== null ? "Edit Account" : "Add/Edit Account";
-        document.getElementById("accFirstName").value = index !== null ? accounts[index].firstName : "";
-        document.getElementById("accLastName").value  = index !== null ? accounts[index].lastName  : "";
-        document.getElementById("accEmail").value     = index !== null ? accounts[index].email     : "";
-        document.getElementById("accPassword").value  = index !== null ? accounts[index].password  : "";
-        document.getElementById("accRole").value      = index !== null ? accounts[index].role      : "user";
-        document.getElementById("accVerified").checked = index !== null ? accounts[index].verified : false;
+        document.getElementById("accFirstName").value = index !== null ? window.db.accounts[index].firstName : "";
+        document.getElementById("accLastName").value  = index !== null ? window.db.accounts[index].lastName  : "";
+        document.getElementById("accEmail").value     = index !== null ? window.db.accounts[index].email     : "";
+        document.getElementById("accPassword").value  = index !== null ? window.db.accounts[index].password  : "";
+        document.getElementById("accRole").value      = index !== null ? window.db.accounts[index].role      : "user";
+        document.getElementById("accVerified").checked = index !== null ? window.db.accounts[index].verified : false;
     }
 }
 
@@ -454,9 +454,9 @@ function saveAccount() {
     }
 
     if (editAccIndex !== null) {
-        accounts[editAccIndex] = { firstName, lastName, email, password, role, verified };
+        window.db.accounts[editAccIndex] = { firstName, lastName, email, password, role, verified };
     } else {
-        accounts.push({ firstName, lastName, email, password, role, verified });
+        window.db.accounts.push({ firstName, lastName, email, password, role, verified });
     }
 
     saveAccounts();
@@ -469,9 +469,9 @@ function editAcc(index) {
 }
 
 function resetPassword(index) {
-    const newPass = prompt("Enter new password for " + accounts[index].firstName + ":");
+    const newPass = prompt("Enter new password for " + window.db.accounts[index].firstName + ":");
     if (newPass && newPass.trim() !== "") {
-        accounts[index].password = newPass.trim();
+        window.db.accounts[index].password = newPass.trim();
         saveAccounts();
         alert("✅ Password reset successfully.");
     }
@@ -481,12 +481,12 @@ function deleteAcc(index) {
     if (confirm("Delete this account?")) {
 
         // Fix: checks if deleting the currently logged-in account (prevents deleting own acc)
-        if (accounts[index].email === currentUser.email) {
+        if (window.db.accounts[index].email === currentUser.email) {
             alert("You cannot delete your own account while logged in.");
             return;
         }        
 
-        accounts.splice(index, 1);
+        window.db.accounts.splice(index, 1);
         saveAccounts();
         renderAccounts();
     }
@@ -597,4 +597,15 @@ function deleteRequest(index) {
 }
 
 // ── Init ───────────────────────────────────────────────────
-updateNavbar();
+const savedToken = localStorage.getItem("auth_token");
+if (savedToken) {
+    const user = window.db.accounts.find(a => a.email === savedToken);
+    if (user) {
+        setAuthState(true, user);
+    } else {
+        localStorage.removeItem("auth_token");
+        setAuthState(false);
+    }
+} else {
+    setAuthState(false);
+}

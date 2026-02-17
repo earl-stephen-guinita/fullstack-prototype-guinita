@@ -14,11 +14,11 @@
 }
 
 body.not-authenticated .role-logged-in { 
-    display: none; 
+    display: none !important; 
 }
 
 body.authenticated .role-logged-out { 
-    display: none; 
+    display: none !important; 
 }
 
 .role-admin { 

@@ -429,6 +429,13 @@ function saveEmployee() {
         return;
     }
 
+    // Email must match an existing account
+    const accountExists = window.db.accounts.find(a => a.email === email);
+    if (!accountExists) {
+        alert("No account found with that email. Please use an existing account email.");
+        return;
+    }
+    
     if (editEmpIndex !== null) {
         employees[editEmpIndex] = { id, email, position, dept, hireDate };
     } else {
@@ -533,6 +540,10 @@ function editAcc(index) {
 function resetPassword(index) {
     const newPass = prompt("Enter new password for " + window.db.accounts[index].firstName + ":");
     if (newPass && newPass.trim() !== "") {
+        if (newPass.trim().length < 6) {
+            alert("Password must be at least 6 characters.");
+            return;
+        }        
         window.db.accounts[index].password = newPass.trim();
         saveAccounts();
         alert("✅ Password reset successfully.");
